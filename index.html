@@ -68,6 +68,17 @@
     .fact:first-child { padding-left: 0; border-left: 0; }
     .fact strong { display: block; font: 600 30px/1.1 var(--serif); }
     .fact span { display: block; max-width: 235px; margin-top: 7px; color: #46604d; font-size: 12px; }
+    .dashboard-section { background: var(--white); }
+    .dashboard-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--line); background: var(--line); }
+    .dashboard-stat { min-width: 0; padding: 20px; background: var(--white); }
+    .dashboard-stat strong { display: block; font: 600 32px/1.1 var(--serif); overflow-wrap: anywhere; }
+    .dashboard-stat span { display: block; margin-top: 7px; color: var(--muted); font-size: 11px; }
+    .dashboard-privacy { margin: 20px 0 30px; padding: 13px 16px; border-left: 3px solid var(--green); background: #edf2e9; color: var(--muted); font-size: 12px; }
+    .dashboard-table-wrap { overflow-x: auto; }
+    .dashboard-table { width: 100%; min-width: 560px; border-collapse: collapse; background: var(--white); font-size: 12px; text-align: left; }
+    .dashboard-table th, .dashboard-table td { padding: 13px 12px; border-bottom: 1px solid var(--line); }
+    .dashboard-table th { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .dashboard-table td { color: var(--ink); }
     .content-section { padding: 100px 24px; }
     .section-inner { width: min(var(--content), 100%); margin: auto; }
     .section-kicker { margin-bottom: 12px; color: var(--green); font-size: 11px; font-weight: 700; text-transform: uppercase; }
@@ -165,6 +176,9 @@
       .fact:last-child { border-bottom: 0; }
       .fact strong { font-size: 25px; }
       .fact span { margin: 0; }
+      .dashboard-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dashboard-stat { padding: 16px; }
+      .dashboard-stat strong { font-size: 27px; }
       .content-section { padding: 72px 18px; }
       .context-band, .quiz-layout { grid-template-columns: 1fr; }
       .context-image { min-height: 245px; }
@@ -193,6 +207,7 @@
     <nav class="nav-wrap" aria-label="Main navigation">
       <a class="brand" href="#home"><span class="brand-mark" aria-hidden="true">↻</span><span>PLASTIC WASTE<br>AWARENESS</span></a>
       <div class="nav-links">
+        <a href="#dashboard">Dashboard</a>
         <a href="#quiz">Quiz</a>
         <a href="#upload">Your impact</a>
         <a class="nav-cta" href="#certificate">Certificate</a>
@@ -219,6 +234,27 @@
         <div class="fact"><strong>400M+</strong><span>tonnes of plastic waste are generated worldwide each year.</span></div>
         <div class="fact"><strong>9%</strong><span>of all plastic waste ever produced has been recycled.</span></div>
         <div class="fact"><strong>1 choice</strong><span>to carry a reusable bottle can avoid hundreds of single-use ones.</span></div>
+      </div>
+    </section>
+
+    <section class="content-section dashboard-section" id="dashboard">
+      <div class="section-inner">
+        <div class="section-kicker">Local learning activity</div>
+        <h2 class="section-heading">Your dashboard</h2>
+        <p class="section-intro">A snapshot of quiz activity and certificates recorded in this browser.</p>
+        <div class="dashboard-cards" aria-label="Local activity summary">
+          <div class="dashboard-stat"><strong id="dashboard-learners">0</strong><span>Learner profiles on this browser</span></div>
+          <div class="dashboard-stat"><strong id="dashboard-attempts">0</strong><span>Completed quiz attempts</span></div>
+          <div class="dashboard-stat"><strong id="dashboard-certificates">0</strong><span>Certificates generated</span></div>
+          <div class="dashboard-stat"><strong id="dashboard-average">--</strong><span>Average quiz mark</span></div>
+        </div>
+        <p class="dashboard-privacy">This is local browser data, not a count of all site visitors. Scores and certificate status stay on this device; names and photos are not saved to this dashboard.</p>
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-table">
+            <thead><tr><th scope="col">Attempt</th><th scope="col">Mark</th><th scope="col">Result</th><th scope="col">Certificate</th><th scope="col">Date</th></tr></thead>
+            <tbody id="dashboard-results"><tr><td colspan="5">No quiz results on this browser yet.</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -339,6 +375,75 @@
     let beforeUrl = null;
     let afterUrl = null;
     let certificateDate = null;
+    const dashboardStorageKey = "plastic-awareness-dashboard-v1";
+
+    function loadDashboardActivity() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(dashboardStorageKey) || "{}");
+        return {
+          interacted: Boolean(saved.interacted),
+          attempts: Array.isArray(saved.attempts) ? saved.attempts.filter(attempt => Number.isFinite(attempt.score) && typeof attempt.date === "string") : []
+        };
+      } catch {
+        return { interacted: false, attempts: [] };
+      }
+    }
+
+    let dashboardActivity = loadDashboardActivity();
+
+    function saveDashboardActivity() {
+      try {
+        localStorage.setItem(dashboardStorageKey, JSON.stringify(dashboardActivity));
+      } catch {
+        // Keep the current session usable when browser storage is unavailable.
+      }
+    }
+
+    function renderDashboard() {
+      const attempts = dashboardActivity.attempts;
+      const certificates = attempts.filter(attempt => attempt.certificate).length;
+      const average = attempts.length ? Math.round(attempts.reduce((sum, attempt) => sum + attempt.score, 0) / attempts.length) : null;
+      document.getElementById("dashboard-learners").textContent = dashboardActivity.interacted ? "1" : "0";
+      document.getElementById("dashboard-attempts").textContent = String(attempts.length);
+      document.getElementById("dashboard-certificates").textContent = String(certificates);
+      document.getElementById("dashboard-average").textContent = average === null ? "--" : `${average}%`;
+
+      const results = document.getElementById("dashboard-results");
+      results.replaceChildren();
+      if (!attempts.length) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 5;
+        cell.textContent = "No quiz results on this browser yet.";
+        row.append(cell);
+        results.append(row);
+        return;
+      }
+
+      attempts.slice(-10).reverse().forEach((attempt, index) => {
+        const row = document.createElement("tr");
+        const values = [
+          `#${attempts.length - index}`,
+          `${attempt.score}%`,
+          attempt.score >= 80 ? "Passed" : "Not passed",
+          attempt.certificate ? "Generated" : "Not generated",
+          new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" }).format(new Date(attempt.date))
+        ];
+        values.forEach(value => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.append(cell);
+        });
+        results.append(row);
+      });
+    }
+
+    function recordInteraction() {
+      if (dashboardActivity.interacted) return;
+      dashboardActivity.interacted = true;
+      saveDashboardActivity();
+      renderDashboard();
+    }
 
     const questionText = document.getElementById("question-text");
     const answerList = document.getElementById("answer-list");
@@ -368,6 +473,7 @@
         input.checked = answers[questionIndex] === index;
         input.addEventListener("change", () => {
           answers[questionIndex] = index;
+          recordInteraction();
           document.getElementById("answered-count").textContent = `${answers.filter(value => value !== null).length} answered`;
           quizMessage.textContent = "";
         });
@@ -416,6 +522,10 @@
       }
       const correct = answers.reduce((total, answer, index) => total + (answer === questions[index].answer ? 1 : 0), 0);
       quizScore = Math.round((correct / questions.length) * 100);
+      dashboardActivity.interacted = true;
+      dashboardActivity.attempts.push({ score: quizScore, date: new Date().toISOString(), certificate: false });
+      saveDashboardActivity();
+      renderDashboard();
       progressFill.style.width = "100%";
       progressTrack.setAttribute("aria-valuenow", "10");
       questionText.textContent = quizScore >= 80 ? "A strong result. You passed." : "Good start. Keep building your knowledge.";
@@ -445,6 +555,7 @@
       }
       const reader = new FileReader();
       reader.addEventListener("load", () => {
+        recordInteraction();
         const url = String(reader.result);
         if (kind === "before") beforeUrl = url;
         else afterUrl = url;
@@ -474,6 +585,12 @@
       document.getElementById("cert-recipient").textContent = name;
       document.getElementById("cert-score").textContent = `${quizScore}%`;
       document.getElementById("cert-date").textContent = certificateDate;
+      const latestAttempt = dashboardActivity.attempts.at(-1);
+      if (latestAttempt) {
+        latestAttempt.certificate = true;
+        saveDashboardActivity();
+        renderDashboard();
+      }
       document.getElementById("certificate-preview").classList.add("visible");
       document.getElementById("download-certificate").classList.add("visible");
       document.getElementById("cert-status").textContent = "Your certificate is ready to download.";
@@ -549,6 +666,7 @@
 
     renderQuestion();
     updateGates();
+    renderDashboard();
   </script>
 </body>
 </html>
