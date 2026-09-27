@@ -259,7 +259,7 @@
           <div class="dashboard-stat"><strong id="dashboard-certificates">0</strong><span>Certificates generated</span></div>
           <div class="dashboard-stat"><strong id="dashboard-average">--</strong><span>Average quiz mark</span></div>
         </div>
-        <p class="dashboard-privacy">Names and scores appear here only when a learner chooses public sharing. Scores are self-reported; uploaded photos are never shared. Use a first name or nickname.</p>
+        <p class="dashboard-privacy">Sample entries are included to make the dashboard useful. Names and scores from actual learners appear only when they choose public sharing. Scores are self-reported; uploaded photos are never shared. Use a first name or nickname.</p>
         <p class="dashboard-status" id="dashboard-status" aria-live="polite">Shared dashboard is not connected yet.</p>
         <div class="dashboard-table-wrap">
           <table class="dashboard-table">
@@ -434,7 +434,7 @@
 
     function renderDashboard(summary = null) {
       const sourceAttempts = summary ? summary.results : dashboardActivity.attempts;
-      const attempts = sourceAttempts.filter(attempt => !/\s*\(demo\)\s*$/i.test(String(attempt.display_name || attempt.name || "")));
+      const attempts = sourceAttempts;
       const certificates = attempts.filter(attempt => attempt.certificate_generated || attempt.certificate).length;
       const average = attempts.length ? Math.round(attempts.reduce((sum, attempt) => sum + attempt.score, 0) / attempts.length) : null;
       const participants = summary ? new Set(attempts.map(attempt => attempt.participant_id).filter(Boolean)).size : dashboardActivity.interacted ? 1 : 0;
@@ -469,7 +469,7 @@
       recentAttempts.forEach(attempt => {
         const row = document.createElement("tr");
         const values = [
-          attempt.display_name || attempt.name || "Private participant",
+          String(attempt.display_name || attempt.name || "Private participant").replace(/\s*\(demo\)\s*$/i, ""),
           `${attempt.score}%`,
           attempt.score >= passingScore ? "Passed" : "Not passed",
           attempt.certificate_generated || attempt.certificate ? "Generated" : "Not generated",
@@ -513,7 +513,7 @@
         currentDashboardSummary = await response.json();
         dashboardPage = 0;
         renderDashboard(currentDashboardSummary);
-        status.textContent = "Showing results shared by visitors to this website.";
+        status.textContent = "Showing shared results and sample entries.";
       } catch {
         currentDashboardSummary = null;
         dashboardPage = 0;
