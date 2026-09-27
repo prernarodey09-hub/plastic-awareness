@@ -255,7 +255,7 @@
           <div class="dashboard-stat"><strong id="dashboard-certificates">0</strong><span>Certificates generated</span></div>
           <div class="dashboard-stat"><strong id="dashboard-average">--</strong><span>Average quiz mark</span></div>
         </div>
-        <p class="dashboard-privacy">Names and scores appear here only when a learner chooses public sharing. Scores are self-reported; uploaded photos are never shared. Use a first name or nickname.</p>
+        <p class="dashboard-privacy">Clearly marked demo entries are included to make the dashboard useful before more learners participate. Real names and scores appear only when a learner chooses public sharing. Scores are self-reported; uploaded photos are never shared. Use a first name or nickname.</p>
         <p class="dashboard-status" id="dashboard-status" aria-live="polite">Shared dashboard is not connected yet.</p>
         <div class="dashboard-table-wrap">
           <table class="dashboard-table">
@@ -476,7 +476,7 @@
         });
         if (!response.ok) throw new Error(`Dashboard request failed (${response.status})`);
         renderDashboard(await response.json());
-        status.textContent = "Showing results shared by visitors to this website.";
+        status.textContent = "Showing results shared by visitors and clearly marked demo examples.";
       } catch {
         status.textContent = "The shared dashboard could not be reached. Try refreshing the page.";
         renderDashboard();
