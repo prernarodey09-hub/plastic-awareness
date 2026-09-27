@@ -80,6 +80,10 @@
     .dashboard-table th, .dashboard-table td { padding: 13px 12px; border-bottom: 1px solid var(--line); }
     .dashboard-table th { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .dashboard-table td { color: var(--ink); }
+    .dashboard-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 16px; color: var(--muted); font-size: 12px; }
+    .dashboard-page-button { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--line); background: var(--white); color: var(--ink); font-size: 18px; line-height: 1; }
+    .dashboard-page-button:hover:not(:disabled) { background: #edf0e6; }
+    .dashboard-page-button:disabled { cursor: not-allowed; opacity: .45; }
     .content-section { padding: 100px 24px; }
     .section-inner { width: min(var(--content), 100%); margin: auto; }
     .section-kicker { margin-bottom: 12px; color: var(--green); font-size: 11px; font-weight: 700; text-transform: uppercase; }
@@ -255,7 +259,7 @@
           <div class="dashboard-stat"><strong id="dashboard-certificates">0</strong><span>Certificates generated</span></div>
           <div class="dashboard-stat"><strong id="dashboard-average">--</strong><span>Average quiz mark</span></div>
         </div>
-        <p class="dashboard-privacy">Clearly marked demo entries are included to make the dashboard useful before more learners participate. Real names and scores appear only when a learner chooses public sharing. Scores are self-reported; uploaded photos are never shared. Use a first name or nickname.</p>
+        <p class="dashboard-privacy">Names and scores appear here only when a learner chooses public sharing. Scores are self-reported; uploaded photos are never shared. Use a first name or nickname.</p>
         <p class="dashboard-status" id="dashboard-status" aria-live="polite">Shared dashboard is not connected yet.</p>
         <div class="dashboard-table-wrap">
           <table class="dashboard-table">
@@ -263,6 +267,11 @@
             <tbody id="dashboard-results"><tr><td colspan="5">No shared quiz results yet.</td></tr></tbody>
           </table>
         </div>
+        <nav class="dashboard-pagination" id="dashboard-pagination" aria-label="Quiz result pages" hidden>
+          <button class="dashboard-page-button" id="dashboard-previous" type="button" aria-label="Previous page" title="Previous page">←</button>
+          <span id="dashboard-page-status" aria-live="polite">Page 1 of 1</span>
+          <button class="dashboard-page-button" id="dashboard-next" type="button" aria-label="Next page" title="Next page">→</button>
+        </nav>
       </div>
     </section>
 
@@ -396,6 +405,9 @@
     let beforeUrl = null;
     let afterUrl = null;
     let certificateDate = null;
+    let dashboardPage = 0;
+    let currentDashboardSummary = null;
+    const dashboardPageSize = 10;
     const dashboardStorageKey = "plastic-awareness-dashboard-v1";
 
     function loadDashboardActivity() {
@@ -421,17 +433,20 @@
     }
 
     function renderDashboard(summary = null) {
-      const attempts = summary ? summary.results : dashboardActivity.attempts;
-      const certificates = summary ? summary.certificates : attempts.filter(attempt => attempt.certificate).length;
-      const average = summary ? summary.average : attempts.length ? Math.round(attempts.reduce((sum, attempt) => sum + attempt.score, 0) / attempts.length) : null;
-      document.getElementById("dashboard-learners").textContent = String(summary ? summary.participants : dashboardActivity.interacted ? 1 : 0);
-      document.getElementById("dashboard-attempts").textContent = String(summary ? summary.attempts : attempts.length);
+      const sourceAttempts = summary ? summary.results : dashboardActivity.attempts;
+      const attempts = sourceAttempts.filter(attempt => !/\s*\(demo\)\s*$/i.test(String(attempt.display_name || attempt.name || "")));
+      const certificates = attempts.filter(attempt => attempt.certificate_generated || attempt.certificate).length;
+      const average = attempts.length ? Math.round(attempts.reduce((sum, attempt) => sum + attempt.score, 0) / attempts.length) : null;
+      const participants = summary ? new Set(attempts.map(attempt => attempt.participant_id).filter(Boolean)).size : dashboardActivity.interacted ? 1 : 0;
+      document.getElementById("dashboard-learners").textContent = String(participants);
+      document.getElementById("dashboard-attempts").textContent = String(attempts.length);
       document.getElementById("dashboard-certificates").textContent = String(certificates);
       document.getElementById("dashboard-average").textContent = average === null ? "--" : `${average}%`;
 
       const results = document.getElementById("dashboard-results");
       results.replaceChildren();
       if (!attempts.length) {
+        document.getElementById("dashboard-pagination").hidden = true;
         const row = document.createElement("tr");
         const cell = document.createElement("td");
         cell.colSpan = 5;
@@ -441,7 +456,16 @@
         return;
       }
 
-      const recentAttempts = summary ? attempts.slice(0, 10) : attempts.slice(-10).reverse();
+      const orderedAttempts = summary ? attempts : attempts.slice().reverse();
+      const pageCount = Math.ceil(orderedAttempts.length / dashboardPageSize);
+      dashboardPage = Math.min(dashboardPage, pageCount - 1);
+      const pageStart = dashboardPage * dashboardPageSize;
+      const recentAttempts = orderedAttempts.slice(pageStart, pageStart + dashboardPageSize);
+      const pagination = document.getElementById("dashboard-pagination");
+      pagination.hidden = pageCount <= 1;
+      document.getElementById("dashboard-page-status").textContent = `Page ${dashboardPage + 1} of ${pageCount}`;
+      document.getElementById("dashboard-previous").disabled = dashboardPage === 0;
+      document.getElementById("dashboard-next").disabled = dashboardPage >= pageCount - 1;
       recentAttempts.forEach(attempt => {
         const row = document.createElement("tr");
         const values = [
@@ -460,9 +484,20 @@
       });
     }
 
+    document.getElementById("dashboard-previous").addEventListener("click", () => {
+      dashboardPage -= 1;
+      renderDashboard(currentDashboardSummary);
+    });
+
+    document.getElementById("dashboard-next").addEventListener("click", () => {
+      dashboardPage += 1;
+      renderDashboard(currentDashboardSummary);
+    });
+
     async function loadSharedDashboard() {
       const status = document.getElementById("dashboard-status");
       if (!supabaseReady) {
+        currentDashboardSummary = null;
         status.textContent = "Shared dashboard is not connected yet. Results currently stay in this browser.";
         renderDashboard();
         return;
@@ -475,9 +510,13 @@
           body: "{}"
         });
         if (!response.ok) throw new Error(`Dashboard request failed (${response.status})`);
-        renderDashboard(await response.json());
-        status.textContent = "Showing results shared by visitors and clearly marked demo examples.";
+        currentDashboardSummary = await response.json();
+        dashboardPage = 0;
+        renderDashboard(currentDashboardSummary);
+        status.textContent = "Showing results shared by visitors to this website.";
       } catch {
+        currentDashboardSummary = null;
+        dashboardPage = 0;
         status.textContent = "The shared dashboard could not be reached. Try refreshing the page.";
         renderDashboard();
       }
