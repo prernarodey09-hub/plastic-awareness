@@ -74,8 +74,9 @@
     .dashboard-stat strong { display: block; font: 600 32px/1.1 var(--serif); overflow-wrap: anywhere; }
     .dashboard-stat span { display: block; margin-top: 7px; color: var(--muted); font-size: 11px; }
     .dashboard-privacy { margin: 20px 0 30px; padding: 13px 16px; border-left: 3px solid var(--green); background: #edf2e9; color: var(--muted); font-size: 12px; }
+    .dashboard-status { min-height: 22px; margin: -15px 0 20px; color: var(--muted); font-size: 12px; }
     .dashboard-table-wrap { overflow-x: auto; }
-    .dashboard-table { width: 100%; min-width: 560px; border-collapse: collapse; background: var(--white); font-size: 12px; text-align: left; }
+    .dashboard-table { width: 100%; min-width: 640px; border-collapse: collapse; background: var(--white); font-size: 12px; text-align: left; }
     .dashboard-table th, .dashboard-table td { padding: 13px 12px; border-bottom: 1px solid var(--line); }
     .dashboard-table th { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .dashboard-table td { color: var(--ink); }
@@ -93,6 +94,12 @@
     .quiz-section { background: #e8eee5; }
     .quiz-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(230px, .65fr); gap: 50px; align-items: start; }
     .quiz-panel { background: var(--white); padding: clamp(24px, 4vw, 44px); border-top: 3px solid var(--green); }
+    .score-sharing { display: grid; gap: 8px; margin: 0 0 24px; padding: 16px; background: #f3f5ee; }
+    .score-sharing > label:first-child { color: var(--ink); font-size: 12px; font-weight: 700; }
+    .score-sharing input[type="text"] { width: 100%; max-width: 420px; min-height: 42px; padding: 9px 11px; border: 1px solid var(--line); background: white; }
+    .sharing-choice { display: flex; align-items: flex-start; gap: 9px; color: var(--ink); font-size: 12px; }
+    .sharing-choice input { margin: 4px 0 0; accent-color: var(--green); }
+    .sharing-note { margin: 0; color: var(--muted); font-size: 11px; }
     .quiz-meta { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 12px; color: var(--muted); font-size: 12px; font-weight: 600; }
     .progress-track { height: 5px; margin-bottom: 27px; background: #e5e8df; }
     .progress-fill { width: 10%; height: 100%; background: var(--green); transition: width .25s; }
@@ -179,6 +186,7 @@
       .dashboard-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .dashboard-stat { padding: 16px; }
       .dashboard-stat strong { font-size: 27px; }
+      .dashboard-table { min-width: 600px; }
       .content-section { padding: 72px 18px; }
       .context-band, .quiz-layout { grid-template-columns: 1fr; }
       .context-image { min-height: 245px; }
@@ -208,9 +216,9 @@
       <a class="brand" href="#home"><span class="brand-mark" aria-hidden="true">↻</span><span>PLASTIC WASTE<br>AWARENESS</span></a>
       <div class="nav-links">
         <a href="#dashboard">Dashboard</a>
-        <a href="#quiz">Quiz</a>
         <a href="#upload">Your impact</a>
-        <a class="nav-cta" href="#certificate">Certificate</a>
+        <a href="#certificate">Certificate</a>
+        <a class="nav-cta" href="#quiz">Take quiz</a>
       </div>
     </nav>
   </header>
@@ -222,7 +230,6 @@
         <h1 id="hero-title">Less plastic.<br>More possibility.</h1>
         <p class="hero-copy">The devices we build and the habits we bring to labs, hostels, and campus life are part of the same system. Learn what to change, put one idea into practice, and make your effort count.</p>
         <div class="hero-actions">
-          <a class="button button-light" href="#quiz">Take the 10-question quiz <span aria-hidden="true">→</span></a>
           <a class="button button-outline" href="#impact">Why it matters</a>
         </div>
       </div>
@@ -239,20 +246,21 @@
 
     <section class="content-section dashboard-section" id="dashboard">
       <div class="section-inner">
-        <div class="section-kicker">Local learning activity</div>
-        <h2 class="section-heading">Your dashboard</h2>
-        <p class="section-intro">A snapshot of quiz activity and certificates recorded in this browser.</p>
+        <div class="section-kicker">Shared learning activity</div>
+        <h2 class="section-heading">Community dashboard</h2>
+        <p class="section-intro">Quiz participation and scores shared by learners across the website.</p>
         <div class="dashboard-cards" aria-label="Local activity summary">
-          <div class="dashboard-stat"><strong id="dashboard-learners">0</strong><span>Learner profiles on this browser</span></div>
-          <div class="dashboard-stat"><strong id="dashboard-attempts">0</strong><span>Completed quiz attempts</span></div>
+          <div class="dashboard-stat"><strong id="dashboard-learners">0</strong><span>Participants recorded</span></div>
+          <div class="dashboard-stat"><strong id="dashboard-attempts">0</strong><span>Completed attempts</span></div>
           <div class="dashboard-stat"><strong id="dashboard-certificates">0</strong><span>Certificates generated</span></div>
           <div class="dashboard-stat"><strong id="dashboard-average">--</strong><span>Average quiz mark</span></div>
         </div>
-        <p class="dashboard-privacy">This is local browser data, not a count of all site visitors. Scores and certificate status stay on this device; names and photos are not saved to this dashboard.</p>
+        <p class="dashboard-privacy">Names and scores appear here only when a learner chooses public sharing. Scores are self-reported; uploaded photos are never shared. Use a first name or nickname.</p>
+        <p class="dashboard-status" id="dashboard-status" aria-live="polite">Shared dashboard is not connected yet.</p>
         <div class="dashboard-table-wrap">
           <table class="dashboard-table">
-            <thead><tr><th scope="col">Attempt</th><th scope="col">Mark</th><th scope="col">Result</th><th scope="col">Certificate</th><th scope="col">Date</th></tr></thead>
-            <tbody id="dashboard-results"><tr><td colspan="5">No quiz results on this browser yet.</td></tr></tbody>
+            <thead><tr><th scope="col">Name</th><th scope="col">Mark</th><th scope="col">Result</th><th scope="col">Certificate</th><th scope="col">Date</th></tr></thead>
+            <tbody id="dashboard-results"><tr><td colspan="5">No shared quiz results yet.</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -279,10 +287,17 @@
         <div>
           <div class="section-kicker">Check what you know</div>
           <h2 class="section-heading">The plastic-wise quiz</h2>
-          <p class="section-intro">Ten questions, one at a time. Score 80% or higher to pass and unlock your certificate.</p>
+          <p class="section-intro">Ten questions, one at a time. Score at least 6 out of 10 to pass and unlock your certificate.</p>
           <div class="quiz-panel" id="quiz-panel">
             <div class="quiz-meta"><span id="question-count">Question 1 of 10</span><span id="answered-count">0 answered</span></div>
             <div class="progress-track" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"><div class="progress-fill" id="progress-fill"></div></div>
+            <div class="score-sharing">
+              <label for="participant-name">Name for the public score table</label>
+              <input id="participant-name" type="text" maxlength="70" autocomplete="name" placeholder="First name or nickname">
+              <label class="sharing-choice"><input id="share-score" type="checkbox"><span>I agree to share this name and my quiz score publicly.</span></label>
+              <p class="sharing-note">Sharing is optional. If unchecked, your result stays in this browser only.</p>
+            </div>
+            <a class="button" href="#question-text">Start the quiz <span aria-hidden="true">↓</span></a>
             <form id="quiz-form">
               <fieldset style="padding:0;border:0;margin:0">
                 <legend class="question" id="question-text"></legend>
@@ -296,7 +311,7 @@
         <aside class="quiz-side">
           <h3>Know the numbers. Change the habit.</h3>
           <p>Recycling labels identify the resin used, not a guarantee that an item is recyclable where you live. Empty and sort packaging according to local rules, and reduce first when you can.</p>
-          <div class="score-badge"><span aria-hidden="true">✳</span> 8 / 10 to pass</div>
+          <div class="score-badge"><span aria-hidden="true">✳</span> 6 / 10 to pass</div>
         </aside>
       </div>
     </section>
@@ -331,7 +346,7 @@
         <h2 class="section-heading">Earn your certificate.</h2>
         <p class="section-intro">Pass the quiz and add both photos to generate a personal certificate. Your images are only used as proof of progress; they are not included on the certificate.</p>
         <div class="cert-gates" aria-label="Certificate requirements">
-          <div class="gate" id="quiz-gate"><span class="gate-dot">1</span><span>Pass the quiz with 80% or more</span></div>
+          <div class="gate" id="quiz-gate"><span class="gate-dot">1</span><span>Pass the quiz with at least 6 correct answers</span></div>
           <div class="gate" id="before-gate"><span class="gate-dot">2</span><span>Add a before photo</span></div>
           <div class="gate" id="after-gate"><span class="gate-dot">3</span><span>Add an after photo</span></div>
         </div>
@@ -357,9 +372,9 @@
 
   <script>
     const questions = [
-      { question: "What does the number inside a plastic recycling triangle tell you?", options: ["That the item is accepted by every recycling program", "The type of resin the plastic is made from", "How many times the item has been recycled", "That the item is made from recycled material"], answer: 1 },
-      { question: "Which resin code is commonly used for clear drink bottles?", options: ["#1 PET", "#3 PVC", "#6 PS", "#7 Other"], answer: 0 },
-      { question: "What is the best first step for a clean plastic container before sorting it?", options: ["Put it inside another container", "Rinse or empty it, following local guidance", "Break it into small pieces", "Mix it with food scraps"], answer: 1 },
+      { question: "Which choice helps reduce single-use plastic?", options: ["Carry a refillable water bottle", "Take a new plastic bottle each day", "Use a disposable cup for every drink", "Wrap each item separately"], answer: 0 },
+      { question: "What should you do with an empty plastic food container before recycling it?", options: ["Leave food inside", "Empty or rinse it, following local guidance", "Put it in a paper-only bin", "Fill it with other rubbish"], answer: 1 },
+      { question: "What does the number inside a plastic recycling triangle identify?", options: ["How many times it was recycled", "The resin type", "That every local program accepts it", "The item's age"], answer: 1 },
       { question: "Why should a plastic bag usually stay out of a curbside recycling bin?", options: ["It is always made of PVC", "It can tangle sorting machinery", "It makes paper unrecyclable", "It dissolves in water"], answer: 1 },
       { question: "Which action is an example of reducing plastic at the source?", options: ["Buying a reusable refill bottle", "Putting more packaging in the bin", "Burning plastic waste", "Wish-cycling a mixed-material wrapper"], answer: 0 },
       { question: "What is one environmental risk of plastic litter in waterways?", options: ["It quickly becomes harmless salt", "Wildlife can ingest it or become entangled", "It increases oxygen in the water", "It prevents all algae growth"], answer: 1 },
@@ -370,8 +385,14 @@
     ];
 
     const answers = Array(questions.length).fill(null);
+    const passingScore = 60;
+    const supabaseUrl = "https://kwsbapniooeujdnizruy.supabase.co";
+    const supabaseAnonKey = "sb_publishable_-XjTX1PzSn_DYnOrKEMQmw_Qa40ULdW";
+    const supabaseBaseUrl = supabaseUrl.replace(/\/+$/, "");
+    const supabaseReady = Boolean(supabaseBaseUrl && supabaseAnonKey);
     let questionIndex = 0;
     let quizScore = null;
+    let remoteAttemptId = null;
     let beforeUrl = null;
     let afterUrl = null;
     let certificateDate = null;
@@ -399,12 +420,12 @@
       }
     }
 
-    function renderDashboard() {
-      const attempts = dashboardActivity.attempts;
-      const certificates = attempts.filter(attempt => attempt.certificate).length;
-      const average = attempts.length ? Math.round(attempts.reduce((sum, attempt) => sum + attempt.score, 0) / attempts.length) : null;
-      document.getElementById("dashboard-learners").textContent = dashboardActivity.interacted ? "1" : "0";
-      document.getElementById("dashboard-attempts").textContent = String(attempts.length);
+    function renderDashboard(summary = null) {
+      const attempts = summary ? summary.results : dashboardActivity.attempts;
+      const certificates = summary ? summary.certificates : attempts.filter(attempt => attempt.certificate).length;
+      const average = summary ? summary.average : attempts.length ? Math.round(attempts.reduce((sum, attempt) => sum + attempt.score, 0) / attempts.length) : null;
+      document.getElementById("dashboard-learners").textContent = String(summary ? summary.participants : dashboardActivity.interacted ? 1 : 0);
+      document.getElementById("dashboard-attempts").textContent = String(summary ? summary.attempts : attempts.length);
       document.getElementById("dashboard-certificates").textContent = String(certificates);
       document.getElementById("dashboard-average").textContent = average === null ? "--" : `${average}%`;
 
@@ -414,20 +435,21 @@
         const row = document.createElement("tr");
         const cell = document.createElement("td");
         cell.colSpan = 5;
-        cell.textContent = "No quiz results on this browser yet.";
+        cell.textContent = "No shared quiz results yet.";
         row.append(cell);
         results.append(row);
         return;
       }
 
-      attempts.slice(-10).reverse().forEach((attempt, index) => {
+      const recentAttempts = summary ? attempts.slice(0, 10) : attempts.slice(-10).reverse();
+      recentAttempts.forEach(attempt => {
         const row = document.createElement("tr");
         const values = [
-          `#${attempts.length - index}`,
+          attempt.display_name || attempt.name || "Private participant",
           `${attempt.score}%`,
-          attempt.score >= 80 ? "Passed" : "Not passed",
-          attempt.certificate ? "Generated" : "Not generated",
-          new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" }).format(new Date(attempt.date))
+          attempt.score >= passingScore ? "Passed" : "Not passed",
+          attempt.certificate_generated || attempt.certificate ? "Generated" : "Not generated",
+          new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" }).format(new Date(attempt.completed_at || attempt.date))
         ];
         values.forEach(value => {
           const cell = document.createElement("td");
@@ -436,6 +458,76 @@
         });
         results.append(row);
       });
+    }
+
+    async function loadSharedDashboard() {
+      const status = document.getElementById("dashboard-status");
+      if (!supabaseReady) {
+        status.textContent = "Shared dashboard is not connected yet. Results currently stay in this browser.";
+        renderDashboard();
+        return;
+      }
+      status.textContent = "Loading shared results...";
+      try {
+        const response = await fetch(`${supabaseBaseUrl}/rest/v1/rpc/get_public_quiz_dashboard`, {
+          method: "POST",
+          headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}`, "Content-Type": "application/json" },
+          body: "{}"
+        });
+        if (!response.ok) throw new Error(`Dashboard request failed (${response.status})`);
+        renderDashboard(await response.json());
+        status.textContent = "Showing results shared by visitors to this website.";
+      } catch {
+        status.textContent = "The shared dashboard could not be reached. Try refreshing the page.";
+        renderDashboard();
+      }
+    }
+
+    function getParticipantId() {
+      const key = "plastic-awareness-participant-id-v1";
+      try {
+        let id = localStorage.getItem(key);
+        if (!id) {
+          id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+          localStorage.setItem(key, id);
+        }
+        return id;
+      } catch {
+        return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+    }
+
+    async function saveSharedScore(name, attempt) {
+      if (!supabaseReady) {
+        document.getElementById("dashboard-status").textContent = "Shared storage is not configured yet; this score is saved in this browser only.";
+        return;
+      }
+      const response = await fetch(`${supabaseBaseUrl}/rest/v1/quiz_results`, {
+        method: "POST",
+        headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}`, "Content-Type": "application/json", Prefer: "return=representation" },
+        body: JSON.stringify({ participant_id: getParticipantId(), display_name: name, score: attempt.score })
+      });
+      if (!response.ok) throw new Error(`Score submission failed (${response.status})`);
+      const [savedAttempt] = await response.json();
+      remoteAttemptId = savedAttempt.attempt_id;
+      attempt.remoteAttemptId = remoteAttemptId;
+      saveDashboardActivity();
+      await loadSharedDashboard();
+    }
+
+    async function markSharedCertificate(attemptId) {
+      if (!supabaseReady || !attemptId) return;
+      try {
+        const response = await fetch(`${supabaseBaseUrl}/rest/v1/quiz_results?attempt_id=eq.${encodeURIComponent(attemptId)}`, {
+          method: "PATCH",
+          headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({ certificate_generated: true })
+        });
+        if (!response.ok) throw new Error(`Certificate update failed (${response.status})`);
+        await loadSharedDashboard();
+      } catch {
+        document.getElementById("dashboard-status").textContent = "Certificate created, but its shared status could not be updated.";
+      }
     }
 
     function recordInteraction() {
@@ -486,7 +578,7 @@
     }
 
     function updateGates() {
-      const passed = quizScore !== null && quizScore >= 80;
+      const passed = quizScore !== null && quizScore >= passingScore;
       const checks = [["quiz-gate", passed], ["before-gate", Boolean(beforeUrl)], ["after-gate", Boolean(afterUrl)]];
       checks.forEach(([id, complete]) => {
         const gate = document.getElementById(id);
@@ -502,13 +594,13 @@
       if (!unlocked) {
         document.getElementById("certificate-preview").classList.remove("visible");
         document.getElementById("download-certificate").classList.remove("visible");
-        document.getElementById("cert-status").textContent = quizScore !== null && !passed ? `You scored ${quizScore}%. Retake the quiz and score at least 80% to unlock the certificate.` : "Complete all three steps to unlock your certificate.";
+          document.getElementById("cert-status").textContent = quizScore !== null && !passed ? `You scored ${quizScore}%. Retake the quiz and score at least ${passingScore}% to unlock the certificate.` : "Complete all three steps to unlock your certificate.";
       } else if (!document.getElementById("certificate-preview").classList.contains("visible")) {
         document.getElementById("cert-status").textContent = "All set. Add your name to create your certificate.";
       }
     }
 
-    quizForm.addEventListener("submit", event => {
+    quizForm.addEventListener("submit", async event => {
       event.preventDefault();
       if (answers[questionIndex] === null) {
         quizMessage.textContent = "Choose an answer before continuing.";
@@ -522,18 +614,35 @@
       }
       const correct = answers.reduce((total, answer, index) => total + (answer === questions[index].answer ? 1 : 0), 0);
       quizScore = Math.round((correct / questions.length) * 100);
+      const publicName = document.getElementById("participant-name").value.trim();
+      const shareScore = document.getElementById("share-score").checked;
+      if (shareScore && !publicName) {
+        quizMessage.textContent = "Enter a first name or nickname to share your score.";
+        document.getElementById("participant-name").focus();
+        return;
+      }
       dashboardActivity.interacted = true;
-      dashboardActivity.attempts.push({ score: quizScore, date: new Date().toISOString(), certificate: false });
+      const attempt = { score: quizScore, date: new Date().toISOString(), certificate: false, name: shareScore ? publicName : "Private participant" };
+      dashboardActivity.attempts.push(attempt);
       saveDashboardActivity();
       renderDashboard();
+      remoteAttemptId = null;
+      if (shareScore && document.getElementById("student-name")) document.getElementById("student-name").value = publicName;
       progressFill.style.width = "100%";
       progressTrack.setAttribute("aria-valuenow", "10");
-      questionText.textContent = quizScore >= 80 ? "A strong result. You passed." : "Good start. Keep building your knowledge.";
+      questionText.textContent = quizScore >= passingScore ? "A strong result. You passed." : "Good start. Keep building your knowledge.";
       answerList.replaceChildren();
       nextButton.hidden = true;
       retakeButton.hidden = false;
-      quizMessage.textContent = `Your score: ${quizScore}% (${correct} of ${questions.length}). ${quizScore >= 80 ? "Certificate quiz requirement complete." : "You need 80% to pass."}`;
+      quizMessage.textContent = `Your score: ${quizScore}% (${correct} of ${questions.length}). ${quizScore >= passingScore ? "Certificate quiz requirement complete." : `You need ${passingScore}% to pass.`}`;
       updateGates();
+      if (shareScore) {
+        try {
+          await saveSharedScore(publicName, attempt);
+        } catch {
+          quizMessage.textContent += " Your score could not be shared right now.";
+        }
+      }
     });
 
     retakeButton.addEventListener("click", () => {
@@ -581,15 +690,20 @@
         document.getElementById("student-name").focus();
         return;
       }
+      const latestAttempt = dashboardActivity.attempts.at(-1);
+      if (latestAttempt && latestAttempt.name !== "Private participant" && latestAttempt.name !== name) {
+        document.getElementById("cert-status").textContent = "Use the same name you shared with your quiz score.";
+        return;
+      }
       certificateDate = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "long", day: "numeric" }).format(new Date());
       document.getElementById("cert-recipient").textContent = name;
       document.getElementById("cert-score").textContent = `${quizScore}%`;
       document.getElementById("cert-date").textContent = certificateDate;
-      const latestAttempt = dashboardActivity.attempts.at(-1);
       if (latestAttempt) {
         latestAttempt.certificate = true;
         saveDashboardActivity();
         renderDashboard();
+        if (remoteAttemptId) markSharedCertificate(remoteAttemptId);
       }
       document.getElementById("certificate-preview").classList.add("visible");
       document.getElementById("download-certificate").classList.add("visible");
@@ -667,6 +781,7 @@
     renderQuestion();
     updateGates();
     renderDashboard();
+    loadSharedDashboard();
   </script>
 </body>
 </html>
